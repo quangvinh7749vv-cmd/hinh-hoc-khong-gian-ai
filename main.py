@@ -83,7 +83,7 @@ def main():
                             * Mở khóa trọn vẹn 100% các bước lập luận, chứng minh toán học chi tiết.
                             * Kích hoạt hệ thống đổ bóng màu neon lấp lánh trực quan hóa thiết diện cắt.
                         """)
-         elif user_role == "Giáo Viên Soạn Đề":
+        elif user_role == "Giáo Viên Soạn Đề":
             st.markdown("### 👩‍🏫 Phân hệ: Công Cụ Tối Cao Cho Giáo Viên (VIP)")
             if is_vip:
                 tab_create, tab_db, tab_latex = st.tabs(["✨ Ma Trận Sinh Đề Thi Đa Dạng", "🗄️ Ngân Hàng Bài Toán", "🔮 Trích Xuất Mã LaTeX & Xuất Bản File 📥"])
@@ -134,7 +134,7 @@ def main():
                                 run.font.subscript = True
                             else:
                                 paragraph.add_run(tok)
-                        doc = Document()
+                    doc = Document()
                     style = doc.styles['Normal']
                     font = style.font
                     font.name = 'Times New Roman'
@@ -220,4 +220,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-                   
