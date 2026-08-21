@@ -100,11 +100,12 @@ def main():
                 with tab_latex:
                     st.markdown("#### 📝 Mã nguồn Vector TikZ / LaTeX để giáo viên in đề thi:")
                     
+                    # Giữ nguyên tuyệt đối máy phát mã TikZ gốc không làm ảnh hưởng compiler bên ngoài
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
+                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -112,26 +113,29 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
                     
-                    # 🛠️ THUẬT TOÁN BIÊN DỊCH WORD SƯ PHẠM CAO CẤP: Chuyển ký hiệu ^ và _ thành mã định dạng native
+                    # 🛠️ ENGINE BIÊN DỊCH TOÁN HỌC NATIVE WORD: Tự động chuyển đổi ^ và _ sang định dạng Word
                     def convert_to_word_script(target_text):
-                        # Khử số mũ dạng nhiều ký tự x^{n+1} hoặc đơn ký tự a^2
+                        # Xử lý các biểu thức số mũ lồng trong dấu ngoặc nhọn: x^{n+1}, V^{2} -> <sup>n+1</sup>
                         target_text = re.sub(r'\^{([^}]+)}', r'<sup>\1</sup>', target_text)
+                        # Xử lý các biểu thức số mũ ký tự đơn lẻ: a^2, V^2 -> <sup>2</sup>
                         target_text = re.sub(r'\^([a-zA-Z0-9-+]+)', r'<sup>\1</sup>', target_text)
-                        # Khử chỉ số dưới dạng nhiều ký tự S_{ABCD} hoặc đơn ký tự x_1
+                        # Xử lý các biểu thức chỉ số dưới lồng ngoặc nhọn: S_{ABCD}, x_{max} -> <sub>ABCD</sub>
                         target_text = re.sub(r'_{([^}]+)}', r'<sub>\1</sub>', target_text)
+                        # Xử lý các biểu thức chỉ số dưới đơn lẻ: x_1, H_2 -> <sub>1</sub>
                         target_text = re.sub(r'_([a-zA-Z0-9-+]+)', r'<sub>\1</sub>', target_text)
                         return target_text
 
-                    # Bọc cấu trúc HTML-Word Engine cơ bản để tệp tin kích hoạt thuộc tính Superscript/Subscript
+                    # Bọc luồng tệp tin XML-HTML Engine để kích hoạt thuộc tính Superscript/Subscript của Word
                     doc_giao_an = "<html><meta charset='utf-8'><body>"
                     doc_giao_an += f"<h2>TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM</h2><br>"
                     doc_giao_an += f"<b>1. ĐỀ BÀI TOÁN GỐC:</b><br>{convert_to_word_script(user_text)}<br><br>"
                     doc_giao_an += f"<b>2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):</b><br>"
                     
+                    # Khử triệt để lỗi TypeError và lỗi lặp phần tử Oxyz bằng cấu trúc index đơn
                     for name, coord in parser.points.items():
-                        x_val = float(coord)
-                        y_val = float(coord)
-                        z_val = float(coord)
+                        x_val = float(coord[0])
+                        y_val = float(coord[1])
+                        z_val = float(coord[2])
                         doc_giao_an += f" - Đỉnh {convert_to_word_script(name)}: Toạ độ không gian hình học là ({x_val}, {y_val}, {z_val})<br>"
                     
                     doc_giao_an += f"<br><b>3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:</b><br>"
@@ -141,7 +145,7 @@ def main():
                         clean_step = clean_step.replace("\\cdot", " x ")
                         clean_step = clean_step.replace("\\perp", " vuông góc với ")
                         clean_step = clean_step.replace("\\Rightarrow", "=>")
-                        # Áp dụng bộ lọc script tự động
+                        # Áp dụng bộ lọc script số mũ gốc cho toàn bộ chuỗi lời giải chi tiết
                         doc_giao_an += f" {convert_to_word_script(clean_step)}<br>"
                         
                     doc_giao_an += "</body></html>"
