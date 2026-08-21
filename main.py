@@ -102,9 +102,9 @@ def main():
                     
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
+                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -112,15 +112,22 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
                     
+                    # BIÊN SOẠN TIÊU CHUẨN WORD: Loại bỏ hoàn toàn mã LaTeX \frac, \cdot ở file Word xuất bản
                     doc_giao_an = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM\n"
                     doc_giao_an += f"=================================================\n\n"
                     doc_giao_an += f"1. ĐỀ BÀI TOÁN GỐC:\n{user_text}\n\n"
                     doc_giao_an += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):\n"
                     for name, coord in parser.points.items():
-                        doc_giao_an += f" - Đỉnh {name}: Toạ độ không gian hình học là ({coord[0]}, {coord[1]}, {coord[2]})\n"
+                        doc_giao_an += f" - Đỉnh {name}: Toạ độ không gian hình học là ({coord}, {coord}, {coord})\n"
                     doc_giao_an += f"\n3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:\n"
                     for step in parser.solution_steps:
+                        # ✨ THUẬT TOÁN KHỬ LỖI CHỮ TOÁN HỌC DÒNG CUỐI: Chuyển mã ký tự LaTeX sang text Word bình thường
                         clean_step = step.replace("**", "").replace("$", "")
+                        clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
+                        clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
+                        clean_step = clean_step.replace("\\cdot", " x ")
+                        clean_step = clean_step.replace("\\perp", " vuông góc với ")
+                        clean_step = clean_step.replace("\\Rightarrow", "=>")
                         doc_giao_an += f" {clean_step}\n"
                     
                     col_file1, col_file2 = st.columns(2)
@@ -166,3 +173,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+        
