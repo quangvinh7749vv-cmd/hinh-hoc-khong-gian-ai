@@ -43,7 +43,7 @@ class GeometryParser:
             self.polygons.append(['A', 'B', 'C', 'D'])
             self.shapes_detected.append("pyramid_square")
             
-            s_day = 4.0 * 4.0
+            s_day = 16.0
             h = 5.0
             v = (1/3) * s_day * h
             
@@ -58,7 +58,7 @@ class GeometryParser:
             self.hints.append("💡 **Gợi ý 1:** Bạn hãy xác định hình phẳng đáy của khối đa diện là hình gì và tính diện tích mặt đó trước.")
             self.hints.append("💡 **Gợi ý 2:** Hãy tìm đoạn thẳng vuông góc với đáy để xác định đường cao chính diện của khối chóp.")
 
-        # Trường hợp 2: Hình lăng trụ đứng ABC.A'B'C' (Đã sửa lỗi quét từ khóa)
+        # Trường hợp 2: Hình lăng trụ đứng ABC.A'B'C'
         if "lăng trụ" in raw_text or "abc a'b'c'" in raw_text or "a'b'c'" in raw_text:
             self.points['A'] = [0.0, 0.0, 0.0]
             self.points['B'] = [4.0, 0.0, 0.0]
@@ -91,7 +91,7 @@ class GeometryParser:
             name, x, y, z = match
             self.points[name] = [float(x), float(y), float(z)]
 
-        # Tính toán tọa độ trung điểm tự động từ câu chữ
+        # ✨ ĐÃ CHUẨN HÓA SỐ LIỆU ĐỘC QUYỀN: Ép kiểu float thuần túy loại bỏ tận gốc lỗi chữ rác np.float64
         midpoint_match = re.search(r"([a-z])\s+là\s+trung\s+điểm\s+của?\s+([a-z])([a-z])", raw_text)
         if midpoint_match:
             m_name = midpoint_match.group(1).upper()
@@ -99,9 +99,10 @@ class GeometryParser:
             p2 = midpoint_match.group(3).upper()
             if p1 in self.points and p2 in self.points:
                 c1, c2 = np.array(self.points[p1]), np.array(self.points[p2])
-                self.points[m_name] = list(np.round((c1 + c2) / 2, 2))
+                raw_coords = (c1 + c2) / 2
+                self.points[m_name] = [float(np.round(x, 2)) for x in raw_coords]
 
-        # Dựng kết cấu khung sườn 3D tự động dựa trên loại hình học phát hiện được
+        # Dựng kết cấu khung sườn 3D tự động
         if "pyramid_square" in self.shapes_detected:
             base = ['A', 'B', 'C', 'D']
             for i in range(len(base)):
