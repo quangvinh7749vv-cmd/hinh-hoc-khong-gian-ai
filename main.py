@@ -5,22 +5,36 @@ from core_parser import GeometryParser
 from ui_layout import build_user_interface
 from graphics_engine import render_graphics_engine
 
+# =================================================================
+# 💳 TRUNG TÂM CẤU HÌNH CỔNG THANH TOÁN (ĐIỀN THÔNG TIN THẬT CỦA BẠN TẠI ĐÂY)
+# =================================================================
+BANK_ID = "mbbank"          # Điền tên ngân hàng viết thường liền nhau (vcb, bidv, techcombank, mbbank)
+ACCOUNT_NO = "0123456789"   # Điền chính xác SỐ TÀI KHOẢN ngân hàng thật của bạn để nhận tiền
+PRICE_AMOUNT = "99000"      # Giá tiền bản quyền VIP trọn đời bạn muốn bán cho khách (đơn vị: VNĐ)
+# =================================================================
+
 def main():
+    # 1. Thu thập luồng dữ liệu từ giao diện ui_layout.py
     user_text, display_column, enable_hidden_lines, enable_shading, theme_color, is_vip, user_role = build_user_interface()
     
+    # 2. Xử lý thuật toán bóc tách hình học
     parser = GeometryParser()
     parser.parse_text(user_text)
     
+    # 3. Kết xuất mô hình đồ họa không gian sang file graphics_engine.py
     visual_model = render_graphics_engine(parser, enable_hidden_lines, enable_shading, theme_color)
     
+    # 4. Phân phối hiển thị khu vực màn hình bên phải
     with display_column:
-        st.markdown("### 📊 Phòng Thí Nghiệm Đồ Họa Hình Học Không Gian")
+        st.markdown("### 📊 Phòng Thí Nghiệm Hình Học Không Gian 3D")
         st.plotly_chart(visual_model, use_container_width=True, config={'scrollZoom': True, 'displaymodeBar': True})
         
+        # 🛡️ CHẾ ĐỘ "KIỂM TRA ĐỀ" - HIỂN THỊ CẢNH BÁO MÂU THUẪN NGAY TRÊN ĐẦU ĐỒ THỊ
         if parser.warnings:
             for warn in parser.warnings:
                 st.markdown(f'<div class="warning-box">{warn}</div>', unsafe_allow_html=True)
         
+        # ĐỒNG BỘ HIỂN THỊ 2D <-> 3D (TỌA ĐỘ VÀ VECTOR HÌNH HỌC)
         with st.expander("🔄 Hệ thống Chuyển đổi Tọa độ Hình Học Không Gian (3D ↔ Oxyz)"):
             col_a, col_b = st.columns(2)
             with col_a:
@@ -29,9 +43,9 @@ def main():
             with col_b:
                 st.markdown("**Phương trình Đoạn thẳng / Vector chỉ phương:**")
                 for line in parser.lines[:4]:
-                    st.code(f"Vector {line[0]}{line[1]} = Tọa độ điểm {line[1]} - Tọa độ điểm {line[0]}")
+                    st.code(f"Vector {line}{line} = Tọa độ điểm {line} - Tọa độ điểm {line}")
 
-        # 🌟 PHẦN PHÂN CHÍNH: HỌC SINH & GIÁO VIÊN
+        # 🌟 PHÂN CHIA TABS CHỨC NĂNG PHÂN QUYỀN THƯƠNG MẠI CHẾ ĐỘ NGƯỜI DÙNG
         if user_role == "Học Sinh Tự Học":
             st.markdown("### 🧑‍🎓 Phân hệ: Học Sinh Tự Học Tương Tác")
             tab_hint, tab_step = st.tabs(["🎁 Chế Độ Gợi Ý Phân Cấp (Tự Làm)", "📚 Đáp Án Chi Tiết Từng Bước (VIP)"])
@@ -39,20 +53,34 @@ def main():
             with tab_hint:
                 st.markdown("#### 🤔 Hệ thống gợi ý tư duy hình học không gian:")
                 if parser.hints:
-                    if st.button("🔓 Xem Gợi Ý Cấp Độ 1"): st.info(parser.hints[0])
-                    if st.button("🔓 Xem Gợi Ý Cấp Độ 2"): st.info(parser.hints[1])
-                    if st.button("🔓 Xem Gợi Ý Cấp Độ 3"): st.info(parser.hints[2]) if len(parser.hints) > 2 else st.info(parser.hints[-1])
+                    if st.button("🔓 Xem Gợi Ý Cấp Độ 1"): st.info(parser.hints)
+                    if st.button("🔓 Xem Gợi Ý Cấp Độ 2"): st.info(parser.hints)
+                    if st.button("🔓 Xem Gợi Ý Cấp Độ 3"): st.info(parser.hints[-1] if len(parser.hints) > 2 else parser.hints)
                 else:
                     st.info("💡 Điền từ khóa đề toán để kích hoạt hệ thống trợ lý gợi ý.")
                     
             with tab_step:
                 if is_vip:
                     st.markdown("#### 📝 Tiến trình giải thích toán học từng bước tự động:")
-                    for i, step in enumerate(parser.solution_steps):
+                    for step in parser.solution_steps:
                         st.markdown(step)
                 else:
                     st.error("🔒 Quyền truy cập bị từ chối. Lời giải lập luận từng bước chỉ dành cho tài khoản VIP.")
-                    st.image(f"https://vietqr.io HOAT VIP HINH HOC", width=200)
+                    
+                    # Hiện cổng thanh toán QR động cho học sinh mua VIP
+                    st.markdown("#### 💳 Quét mã chuyển khoản App Ngân Hàng để mua Mã Bản Quyền VIP Học Sinh:")
+                    col_qr, col_info = st.columns([1, 1.5])
+                    with col_qr:
+                        DESCRIPTION = "KICH HOAT VIP HINH HOC AI"
+                        qr_url = f"https://vietqr.io{BANK_ID}-{ACCOUNT_NO}-compact2.png?amount={PRICE_AMOUNT}&addInfo={DESCRIPTION}"
+                        st.image(qr_url, caption="Quét mã VietQR thanh toán tự động 24/7", width=220)
+                    with col_info:
+                        st.markdown("""
+                            **Đặc quyền độc nhất khi kích hoạt tài khoản VIP Học Sinh:**
+                            * Mở khóa trọn vẹn 100% các bước lập luận, chứng minh toán học chi tiết.
+                            * Kích hoạt hệ thống đổ bóng màu neon lấp lánh trực quan hóa thiết diện cắt.
+                            * Hỗ trợ trích xuất số liệu đại số tính diện tích đáy, trục chiều cao, thể tích khối chóp.
+                        """)
 
         elif user_role == "Giáo Viên Soạn Đề":
             st.markdown("### 👩‍🏫 Phân hệ: Công Cụ Tối Cao Cho Giáo Viên (VIP)")
@@ -76,41 +104,55 @@ def main():
                     st.markdown("#### 📝 Mã nguồn Vector TikZ / LaTeX để giáo viên in đề thi:")
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
+                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
-                    # 🔥 🔥 🔥 TÍNH NĂNG XUẤT FILE TÀI LIỆU ĐỘC QUYỀN (EXCLUSIVE EXPORT ENGINE)
+                    # TRUNG TÂM XUẤT BẢN TÀI LIỆU SẠCH LỖI FONT
                     st.markdown("---")
-                    st.markdown("### 📥 Trung tâm Xuất bản Tài liệu")
-                    st.write("Hệ thống sẽ tự động đóng gói Đề bài, Tọa độ Oxyz, Mã vẽ hình và Toàn bộ lời giải chi tiết thành file tài liệu chuẩn để thầy cô tải về máy.")
+                    st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Giáo Án")
+                    st.write("Hệ thống đóng gói Đề bài, Tọa độ Oxyz, Mã vẽ hình và Lời giải chi tiết thành tài liệu để thầy cô in ấn trực tiếp.")
                     
-                    # Biên soạn nội dung văn bản tài liệu sạch để ghi vào file
-                    document_content = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI\n"
-                    document_content += f"=========================================\n\n"
-                    document_content += f"1. ĐỀ BÀI TOÁN:\n{user_text}\n\n"
-                    document_content += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN (Oxyz):\n"
+                    document_content = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM\n"
+                    document_content += f"=================================================\n\n"
+                    document_content += f"1. ĐỀ BÀI TOÁN GỐC:\n{user_text}\n\n"
+                    document_content += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):\n"
                     for name, coord in parser.points.items():
-                        document_content += f" - Đỉnh {name}: Tọa độ ({coord[0]}, {coord[1]}, {coord[2]})\n"
-                    document_content += f"\n3. MÃ VẼ HÌNH LATEX/TIKZ (Dành cho đề thi):\n{latex_code}\n\n"
-                    document_content += f"4. HƯỚNG DẪN GIẢI CHI TIẾT TỪNG BƯỚC:\n"
+                        document_content += f" - Đỉnh {name}: Toạ độ không gian hình học là ({coord}, {coord}, {coord})\n"
+                    document_content += f"\n3. MÃ VẼ HÌNH VECTOR LATEX/TIKZ (Dành cho phần mềm soạn đề thi):\n{latex_code}\n\n"
+                    document_content += f"4. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:\n"
                     for step in parser.solution_steps:
-                        # Xóa bỏ ký tự định dạng markdown để file văn bản sạch đẹp
                         clean_step = step.replace("**", "").replace("$", "")
                         document_content += f" {clean_step}\n"
                     
-                    # 📥 TẠO NÚT BẤM TẢI FILE TRỰC TIẾP (.txt mở bằng Word ngon lành)
+                    # ✨ SỬA LỖI CHỮ LẠ: Ép mã hóa định dạng utf-8-sig (BOM) để Microsoft Word và WPS đọc đúng dấu Tiếng Việt
+                    binary_content = document_content.encode('utf-8-sig')
+                    
                     st.download_button(
-                        label="📥 BẤM ĐỂ TẢI FILE TÀI LIỆU (.DOCX/TXT) VỀ MÁY",
-                        data=document_content,
-                        file_name="Giao_An_Hinh_Hoc_AI_Premium.doc", # Định dạng .doc mở thẳng bằng Word chuẩn đét
+                        label="📥 BẤM VÀO ĐÂY ĐỂ TẢI FILE GIÁO ÁN WORD VỀ MÁY",
+                        data=binary_content,
+                        file_name="Giao_An_Hinh_Hoc_AI_Premium.doc", 
                         mime="application/msword"
                     )
             else:
-                st.error("🔒 Quyền đặc quyền: Tính năng tạo đề thi, ma trận mã đề, ngân hàng bài toán và XUẤT FILE TÀI LIỆU chỉ dành cho tài khoản VIP Giáo Viên.")
-                st.image(f"https://vietqr.io HOAT VIP GIAO VIEN", width=200)
+                st.error("🔒 Quyền đặc quyền: Tính năng tạo đề thi, lăng trụ mã đề, ngân hàng bài toán và XUẤT FILE TÀI LIỆU chỉ dành cho tài khoản VIP Giáo Viên.")
+                
+                # Hiện cổng thanh toán QR động cho giáo viên mua VIP
+                st.markdown("#### 💳 Quét mã chuyển khoản App Ngân Hàng để mua Quyền Bản Quyền VIP Giáo Viên:")
+                col_qr, col_info = st.columns([1, 1.5])
+                with col_qr:
+                    DESCRIPTION = "KICH HOAT VIP GIAO VIEN"
+                    qr_url = f"https://vietqr.io{BANK_ID}-{ACCOUNT_NO}-compact2.png?amount={PRICE_AMOUNT}&addInfo={DESCRIPTION}"
+                    st.image(qr_url, caption="Quét mã VietQR thanh toán tự động 24/7", width=220)
+                with col_info:
+                    st.markdown("""
+                        **Đặc quyền tối cao dành cho Giáo Viên VIP:**
+                        * Mở khóa trọn vẹn công cụ sinh mã đề trắc nghiệm đa dạng nhiều mức độ khó.
+                        * Kích hoạt quyền tải file Giáo án/Đề thi Word (.doc) sạch lỗi font tiếng Việt về máy tính.
+                        * Trích xuất mã nhúng hình vẽ Vector TikZ/LaTeX chuyên nghiệp để chèn vào giáo án in ấn.
+                    """)
 
 if __name__ == "__main__":
     main()
