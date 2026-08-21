@@ -83,7 +83,7 @@ def main():
                             * Mở khóa trọn vẹn 100% các bước lập luận, chứng minh toán học chi tiết.
                             * Kích hoạt hệ thống đổ bóng màu neon lấp lánh trực quan hóa thiết diện cắt.
                         """)
-                                elif user_role == "Giáo Viên Soạn Đề":
+         elif user_role == "Giáo Viên Soạn Đề":
             st.markdown("### 👩‍🏫 Phân hệ: Công Cụ Tối Cao Cho Giáo Viên (VIP)")
             if is_vip:
                 tab_create, tab_db, tab_latex = st.tabs(["✨ Ma Trận Sinh Đề Thi Đa Dạng", "🗄️ Ngân Hàng Bài Toán", "🔮 Trích Xuất Mã LaTeX & Xuất Bản File 📥"])
@@ -116,7 +116,6 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đóng gói tài liệu tự động qua Python-Docx Engine, nén cấu trúc nhị phân đạt chuẩn quốc tế, tương thích chéo thiết bị di động.")
                     
-                    # 🛠️ TRÌNH BIÊN DỊCH CHỮ SỐ MŨ NATIVE WORD: Tách chuỗi văn bản thành các Run đối tượng
                     def add_math_text_to_paragraph(paragraph, text_content):
                         tokens = re.split(r'(\^{[^}]+}|\^[a-zA-Z0-9-+]+|_{[^}]+}|_[a-zA-Z0-9-+]+)', text_content)
                         for tok in tokens:
@@ -135,16 +134,12 @@ def main():
                                 run.font.subscript = True
                             else:
                                 paragraph.add_run(tok)
-                    # 🛠️ KHỞI TẠO ĐỘNG CƠ ZIP-OOXML ENGINE CỦA MICROSOFT WORD
-                    doc = Document()
-                    
-                    # Thiết lập Font chữ Times New Roman tiêu chuẩn sư phạm Việt Nam
+                        doc = Document()
                     style = doc.styles['Normal']
                     font = style.font
                     font.name = 'Times New Roman'
                     font.size = Pt(13)
                     
-                    # 1. Tiêu đề tài liệu
                     p_title = doc.add_paragraph()
                     p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run_title = p_title.add_run("TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM")
@@ -152,13 +147,11 @@ def main():
                     run_title.font.size = Pt(15)
                     doc.add_paragraph("=================================================")
                     
-                    # 2. Đề bài toán gốc
                     p_h1 = doc.add_paragraph()
                     p_h1.add_run("1. ĐỀ BÀI TOÁN GỐC:").bold = True
                     p_body1 = doc.add_paragraph()
                     add_math_text_to_paragraph(p_body1, user_text)
                     
-                    # 3. Số liệu phân tích tọa độ Oxyz sạch
                     p_h2 = doc.add_paragraph()
                     p_h2.add_run("2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):").bold = True
                     for name, coord in parser.points.items():
@@ -166,7 +159,6 @@ def main():
                         add_math_text_to_paragraph(p_coord, f" - Đỉnh {name}: ")
                         p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord)}, {float(coord)}, {float(coord)})")
                         
-                    # 4. Hướng dẫn giải chi tiết
                     p_h3 = doc.add_paragraph()
                     p_h3.add_run("3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:").bold = True
                     for step in parser.solution_steps:
@@ -176,7 +168,6 @@ def main():
                         p_sol = doc.add_paragraph()
                         add_math_text_to_paragraph(p_sol, clean_step)
                         
-                    # 5. Mã vẽ hình TikZ
                     p_h4 = doc.add_paragraph()
                     p_h4.add_run("4. MÃ VẼ HÌNH VECTOR LATEX/TIKZ (SẠCH CHỐNG BIẾN DẠNG):").bold = True
                     doc.add_paragraph("--------------------------------------------------")
@@ -184,7 +175,6 @@ def main():
                         doc.add_paragraph(tk_line)
                     doc.add_paragraph("--------------------------------------------------")
                     
-                    # Lưu luồng dữ liệu nhị phân ZIP thực tế vào bộ nhớ đệm chống lỗi cú pháp Android
                     docx_buffer = io.BytesIO()
                     doc.save(docx_buffer)
                     native_docx_data = docx_buffer.getvalue()
@@ -214,7 +204,7 @@ def main():
                             use_container_width=True
                         )
             else:
-                st.error("🔒 Quyền đặc quyền: Tính năng tạo đề thi, lăng trụ mã đề, ngân hàng bài toán và XUẤT FILE TÀI LIỆU chỉ dành cho tài khoản VIP Giáo Viên.")
+                st.error("🔒 Quyền đặc quyền: Tính năng tạo đề thi, ngân hàng bài toán và XUẤT FILE TÀI LIỆU chỉ dành cho tài khoản VIP Giáo Viên.")
                 st.markdown("#### 💳 Quét mã chuyển khoản App Ngân Hàng để mua Quyền Bản Quyền VIP Giáo Viên:")
                 col_qr, col_info = st.columns([1, 1.5])
                 with col_qr:
@@ -230,4 +220,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+                   
