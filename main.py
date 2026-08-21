@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import re
 from core_parser import GeometryParser
 from ui_layout import build_user_interface
 from graphics_engine import render_graphics_engine
@@ -53,8 +54,8 @@ def main():
             with tab_hint:
                 st.markdown("#### 🤔 Hệ thống gợi ý tư duy hình học không gian:")
                 if parser.hints:
-                    if st.button("🔓 Xem Gợi Ý Cấp Độ 1"): st.info(parser.hints[0] if len(parser.hints) > 0 else parser.hints)
-                    if st.button("🔓 Xem Gợi Ý Cấp Độ 2"): st.info(parser.hints[1] if len(parser.hints) > 1 else parser.hints)
+                    if st.button("🔓 Xem Gợi Ý Cấp Độ 1"): st.info(parser.hints if len(parser.hints) > 0 else parser.hints)
+                    if st.button("🔓 Xem Gợi Ý Cấp Độ 2"): st.info(parser.hints if len(parser.hints) > 1 else parser.hints)
                     if st.button("🔓 Xem Gợi Ý Cấp Độ 3"): st.info(parser.hints[-1] if len(parser.hints) > 2 else parser.hints)
                 else:
                     st.info("💡 Điền từ khóa đề toán để kích hoạt hệ thống trợ lý gợi ý.")
@@ -101,9 +102,9 @@ def main():
                     
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
+                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -111,25 +112,39 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
                     
-                    doc_giao_an = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM\n"
-                    doc_giao_an += f"=================================================\n\n"
-                    doc_giao_an += f"1. ĐỀ BÀI TOÁN GỐC:\n{user_text}\n\n"
-                    doc_giao_an += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):\n"
+                    # 🛠️ THUẬT TOÁN BIÊN DỊCH WORD SƯ PHẠM CAO CẤP: Chuyển ký hiệu ^ và _ thành mã định dạng native
+                    def convert_to_word_script(target_text):
+                        # Khử số mũ dạng nhiều ký tự x^{n+1} hoặc đơn ký tự a^2
+                        target_text = re.sub(r'\^{([^}]+)}', r'<sup>\1</sup>', target_text)
+                        target_text = re.sub(r'\^([a-zA-Z0-9-+]+)', r'<sup>\1</sup>', target_text)
+                        # Khử chỉ số dưới dạng nhiều ký tự S_{ABCD} hoặc đơn ký tự x_1
+                        target_text = re.sub(r'_{([^}]+)}', r'<sub>\1</sub>', target_text)
+                        target_text = re.sub(r'_([a-zA-Z0-9-+]+)', r'<sub>\1</sub>', target_text)
+                        return target_text
+
+                    # Bọc cấu trúc HTML-Word Engine cơ bản để tệp tin kích hoạt thuộc tính Superscript/Subscript
+                    doc_giao_an = "<html><meta charset='utf-8'><body>"
+                    doc_giao_an += f"<h2>TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM</h2><br>"
+                    doc_giao_an += f"<b>1. ĐỀ BÀI TOÁN GỐC:</b><br>{convert_to_word_script(user_text)}<br><br>"
+                    doc_giao_an += f"<b>2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):</b><br>"
                     
                     for name, coord in parser.points.items():
-                        x_val = float(coord[0])
-                        y_val = float(coord[1])
-                        z_val = float(coord[2])
-                        doc_giao_an += f" - Đỉnh {name}: Toạ độ không gian hình học là ({x_val}, {y_val}, {z_val})\n"
+                        x_val = float(coord)
+                        y_val = float(coord)
+                        z_val = float(coord)
+                        doc_giao_an += f" - Đỉnh {convert_to_word_script(name)}: Toạ độ không gian hình học là ({x_val}, {y_val}, {z_val})<br>"
                     
-                    doc_giao_an += f"\n3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:\n"
+                    doc_giao_an += f"<br><b>3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:</b><br>"
                     for step in parser.solution_steps:
                         clean_step = step.replace("**", "").replace("$", "")
                         clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
                         clean_step = clean_step.replace("\\cdot", " x ")
                         clean_step = clean_step.replace("\\perp", " vuông góc với ")
                         clean_step = clean_step.replace("\\Rightarrow", "=>")
-                        doc_giao_an += f" {clean_step}\n"
+                        # Áp dụng bộ lọc script tự động
+                        doc_giao_an += f" {convert_to_word_script(clean_step)}<br>"
+                        
+                    doc_giao_an += "</body></html>"
                     
                     col_file1, col_file2 = st.columns(2)
                     
