@@ -24,7 +24,7 @@ def build_user_interface():
             st.sidebar.success("👑 KHÁCH HÀNG VIP: Đã kích hoạt đầy đủ đặc quyền!")
         
         st.markdown("---")
-        # 🛠️ CHỌN PHÂN HỆ SỬ DỤNG THƯƠNG MẠI
+        # Chọn phân hệ người dùng thương mại
         user_role = st.selectbox("🎯 Chọn phân hệ người dùng:", ["Học Sinh Tự Học", "Giáo Viên Soạn Đề"])
         
         st.markdown("### 📝 Ô Nhập Đề Bài")
@@ -41,4 +41,5 @@ def build_user_interface():
         enable_shading = is_vip and st.checkbox("Đổ bóng màu chuyển sắc khối hình học", value=True)
         theme_color = st.color_picker("Tông màu thiết diện chủ đạo:", "#00f5d4") if is_vip else "#e9ecef"
             
+    # ĐỒNG BỘ: Trả về chính xác và đầy đủ cả 7 tham số dữ liệu
     return user_input, col2, enable_hidden_lines, enable_shading, theme_color, is_vip, user_role
