@@ -28,41 +28,42 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
             except KeyError:
                 continue
 
-    # 2. THUẬT TOÁN PHÂN LAI NÉT KHUẤT TOÁN HỌC & ĐO ĐẠC ĐỘ DÀI
+    # 2. THUẬT TOÁN PHÂN LOẠI NÉT KHUẤT TOÁN HỌC & ĐO ĐẠC ĐỘ DÀI (ĐÃ SỬA LỖI INDEX)
     for line in parser_data.lines:
-        pt1, pt2 = line[0], line[1]
-        if pt1 in parser_data.points and pt2 in parser_data.points:
-            p1_coords = np.array(parser_data.points[pt1])
-            p2_coords = np.array(parser_data.points[pt2])
-            
-            x_coords = [p1_coords[0], p2_coords[0]]
-            y_coords = [p1_coords[1], p2_coords[1]]
-            z_coords = [p1_coords[2], p2_coords[2]]
-            
-            # Tính khoảng cách hình học thực tế
-            dist = np.sqrt(np.sum((p1_coords - p2_coords)**2))
-            edge_label = f"✨ Cạnh hoặc Đường nối: {pt1}{pt2}<br>📏 Số đo độ dài: {round(dist, 2)} cm"
+        if len(line) == 2:
+            pt1, pt2 = line[0], line[1] # SỬA LỖI CHÍNH TẢ: Trích xuất chuẩn điểm đầu và điểm cuối
+            if pt1 in parser_data.points and pt2 in parser_data.points:
+                p1_coords = np.array(parser_data.points[pt1])
+                p2_coords = np.array(parser_data.points[pt2])
+                
+                x_coords = [p1_coords[0], p2_coords[0]]
+                y_coords = [p1_coords[1], p2_coords[1]]
+                z_coords = [p1_coords[2], p2_coords[2]]
+                
+                # Tính khoảng cách hình học thực tế
+                dist = np.sqrt(np.sum((p1_coords - p2_coords)**2))
+                edge_label = f"✨ Cạnh hoặc Đường nối: {pt1}{pt2}<br>📏 Số đo độ dài: {round(dist, 2)} cm"
 
-            # Thuật toán lọc nét khuất vũ trụ
-            is_hidden = False
-            if enable_hidden_lines:
-                hidden_nodes = ['A', 'D'] 
-                if (pt1 in hidden_nodes and pt2 in hidden_nodes) or (pt1 == 'S' and pt2 == 'A') or (pt1 == 'A' and pt2 == 'B'):
-                    is_hidden = True
+                # Thuật toán lọc nét khuất vũ trụ
+                is_hidden = False
+                if enable_hidden_lines:
+                    hidden_nodes = ['A', 'D'] 
+                    if (pt1 in hidden_nodes and pt2 in hidden_nodes) or (pt1 == 'S' and pt2 == 'A') or (pt1 == 'A' and pt2 == 'B'):
+                        is_hidden = True
 
-            if is_hidden:
-                line_style = dict(color='#adb5bd', width=2.5, dash='dash') 
-            else:
-                line_style = dict(color='#1e293b', width=4) 
+                if is_hidden:
+                    line_style = dict(color='#adb5bd', width=2.5, dash='dash') 
+                else:
+                    line_style = dict(color='#1e293b', width=4) 
 
-            fig.add_trace(go.Scatter3d(
-                x=x_coords, y=y_coords, z=z_coords,
-                mode='lines',
-                line=line_style,
-                text=edge_label,
-                hoverinfo='text', 
-                showlegend=False
-            ))
+                fig.add_trace(go.Scatter3d(
+                    x=x_coords, y=y_coords, z=z_coords,
+                    mode='lines',
+                    line=line_style,
+                    text=edge_label,
+                    hoverinfo='text', 
+                    showlegend=False
+                ))
 
     # 3. KẾT XUẤT ĐỈNH GLOW & TỌA ĐỘ PHÁT SÁNG
     if parser_data.points:
