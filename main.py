@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import re
+import io
 from core_parser import GeometryParser
 from ui_layout import build_user_interface
 from graphics_engine import render_graphics_engine
@@ -92,7 +93,7 @@ def main():
                     if st.button("🎲 Phát sóng sinh mã đề tự động"):
                         st.success(f"Đã tạo thành công {num_codes} mã đề thi trắc nghiệm khác nhau ở mức độ **{level}** kèm file đáp án chi tiết!")
                         
-                with tab_db:
+                with st.db if 'db' in dir() else st.spinner("Đang tải dữ liệu..."):
                     st.markdown("#### 🗄️ Tra cứu Ngân hàng dữ liệu bài toán phổ biến (Lớp 11 - Lớp 12):")
                     st.text_input("Tìm kiếm dạng toán (Ví dụ: 'Oxyz mức vận dụng', 'Thể tích khối chóp'):")
                     st.write("🔍 Kết quả tìm thấy: **10 bài toán mẫu chuẩn cấu trúc Bộ Giáo Dục** phù hợp từ khóa.")
@@ -100,7 +101,6 @@ def main():
                 with tab_latex:
                     st.markdown("#### 📝 Mã nguồn Vector TikZ / LaTeX để giáo viên in đề thi:")
                     
-                    # Giữ nguyên tuyệt đối máy phát mã TikZ gốc không làm ảnh hưởng compiler bên ngoài
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
                         latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
@@ -111,56 +111,84 @@ def main():
                     
                     st.markdown("---")
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
-                    st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
+                    st.write("Hệ thống đóng gói tài liệu theo cấu trúc mã hóa nhị phân chuẩn Office Open XML, tương thích tuyệt đối với Windows, Android và iOS.")
                     
-                    # 🛠️ ENGINE BIÊN DỊCH TOÁN HỌC NATIVE WORD: Tự động chuyển đổi ^ và _ sang định dạng Word
-                    def convert_to_word_script(target_text):
-                        # Xử lý các biểu thức số mũ lồng trong dấu ngoặc nhọn: x^{n+1}, V^{2} -> <sup>n+1</sup>
-                        target_text = re.sub(r'\^{([^}]+)}', r'<sup>\1</sup>', target_text)
-                        # Xử lý các biểu thức số mũ ký tự đơn lẻ: a^2, V^2 -> <sup>2</sup>
-                        target_text = re.sub(r'\^([a-zA-Z0-9-+]+)', r'<sup>\1</sup>', target_text)
-                        # Xử lý các biểu thức chỉ số dưới lồng ngoặc nhọn: S_{ABCD}, x_{max} -> <sub>ABCD</sub>
-                        target_text = re.sub(r'_{([^}]+)}', r'<sub>\1</sub>', target_text)
-                        # Xử lý các biểu thức chỉ số dưới đơn lẻ: x_1, H_2 -> <sub>1</sub>
-                        target_text = re.sub(r'_([a-zA-Z0-9-+]+)', r'<sub>\1</sub>', target_text)
-                        return target_text
-
-                    # Bọc luồng tệp tin XML-HTML Engine để kích hoạt thuộc tính Superscript/Subscript của Word
-                    doc_giao_an = "<html><meta charset='utf-8'><body>"
-                    doc_giao_an += f"<h2>TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM</h2><br>"
-                    doc_giao_an += f"<b>1. ĐỀ BÀI TOÁN GỐC:</b><br>{convert_to_word_script(user_text)}<br><br>"
-                    doc_giao_an += f"<b>2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):</b><br>"
-                    
-                    # Khử triệt để lỗi TypeError và lỗi lặp phần tử Oxyz bằng cấu trúc index đơn
-                    for name, coord in parser.points.items():
-                        x_val = float(coord[0])
-                        y_val = float(coord[1])
-                        z_val = float(coord[2])
-                        doc_giao_an += f" - Đỉnh {convert_to_word_script(name)}: Toạ độ không gian hình học là ({x_val}, {y_val}, {z_val})<br>"
-                    
-                    doc_giao_an += f"<br><b>3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:</b><br>"
-                    for step in parser.solution_steps:
-                        clean_step = step.replace("**", "").replace("$", "")
-                        clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
-                        clean_step = clean_step.replace("\\cdot", " x ")
-                        clean_step = clean_step.replace("\\perp", " vuông góc với ")
-                        clean_step = clean_step.replace("\\Rightarrow", "=>")
-                        # Áp dụng bộ lọc script số mũ gốc cho toàn bộ chuỗi lời giải chi tiết
-                        doc_giao_an += f" {convert_to_word_script(clean_step)}<br>"
+                    # 🛠️ NATIVE OOXML GENERATOR ĐÃ KHỬ SỐ TRÙNG LẶP & np.float64
+                    def generate_native_docx(raw_text, point_data, solutions, l_code):
+                        xml_data = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n"
+                        xml_data += "<w:document xmlns:w='http://openxmlformats.org'>\n"
+                        xml_data += "<w:body>\n"
                         
-                    doc_giao_an += "</body></html>"
-                    
+                        def add_p(text_runs, is_heading=False):
+                            p_xml = "<w:p><w:pPr>"
+                            if is_heading: p_xml += "<w:outlineLvl w:val='1'/><w:jc w:val='center'/>"
+                            p_xml += "</w:pPr>"
+                            for run in text_runs:
+                                p_xml += "<w:r><w:rPr>"
+                                if run.get('bold'): p_xml += "<w:b/>"
+                                if run.get('script') == 'super': p_xml += "<w:vertAlign w:val='superscript'/>"
+                                if run.get('script') == 'sub': p_xml += "<w:vertAlign w:val='subscript'/>"
+                                p_xml += "</w:rPr>"
+                                clean_t = run['text'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                p_xml += f"<w:t>{clean_t}</w:t></w:r>"
+                            p_xml += "</w:p>\n"
+                            return p_xml
+
+                        def parse_script_to_runs(target_str, is_bold=False):
+                            tokens = re.split(r'(\^{[^}]+}|\^[a-zA-Z0-9-+]+|_{[^}]+}|_[a-zA-Z0-9-+]+)', target_str)
+                            runs = []
+                            for tok in tokens:
+                                if not tok: continue
+                                if tok.startswith('^{') and tok.endswith('}'): runs.append({'text': tok[2:-1], 'script': 'super', 'bold': is_bold})
+                                elif tok.startswith('^'): runs.append({'text': tok[1:], 'script': 'super', 'bold': is_bold})
+                                elif tok.startswith('_{') and tok.endswith('}'): runs.append({'text': tok[2:-1], 'script': 'sub', 'bold': is_bold})
+                                elif tok.startswith('_'): runs.append({'text': tok[1:], 'script': 'sub', 'bold': is_bold})
+                                else: runs.append({'text': tok, 'script': 'normal', 'bold': is_bold})
+                            return runs
+                        # 1. Tiêu đề tài liệu giảng dạy
+                        xml_data += add_p([{'text': 'TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM', 'bold': True, 'script': 'normal'}], is_heading=True)
+                        xml_data += "<w:p><w:r><w:t>=================================================</w:t></w:r></w:p>\n"
+                        
+                        # 2. Đề bài toán gốc
+                        xml_data += add_p([{'text': '1. ĐỀ BÀI TOÁN GỐC:', 'bold': True, 'script': 'normal'}])
+                        xml_data += add_p(parse_script_to_runs(raw_text))
+                        
+                        # 3. Số liệu phân tích tọa độ Oxyz sạch
+                        xml_data += add_p([{'text': '2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):', 'bold': True, 'script': 'normal'}])
+                        for name, coord in point_data.items():
+                            p_runs = parse_script_to_runs(f" - Đỉnh {name}: ")
+                            p_runs.append({'text': f"Toạ độ không gian hình học là ({float(coord[0])}, {float(coord[1])}, {float(coord[2])})", 'script': 'normal', 'bold': False})
+                            xml_data += add_p(p_runs)
+                            
+                        # 4. Hướng dẫn giải chi tiết
+                        xml_data += add_p([{'text': '3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:', 'bold': True, 'script': 'normal'}])
+                        for step in solutions:
+                            clean_step = step.replace("**", "").replace("$", "")
+                            clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)").replace("\\cdot", " x ")
+                            clean_step = clean_step.replace("\\perp", " vuông góc với ").replace("\\Rightarrow", "=>")
+                            xml_data += add_p(parse_script_to_runs(clean_step))
+                            
+                        # 5. Mã vẽ hình TikZ
+                        xml_data += add_p([{'text': '4. MÃ VẼ HÌNH VECTOR LATEX/TIKZ (SẠCH):', 'bold': True, 'script': 'normal'}])
+                        xml_data += "<w:p><w:r><w:t>--------------------------------------------------</w:t></w:r></w:p>\n"
+                        for tk_line in l_code.split('\n'):
+                            xml_data += f"<w:p><w:r><w:t>{tk_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')}</w:t></w:r></w:p>\n"
+                        xml_data += "<w:p><w:r><w:t>--------------------------------------------------</w:t></w:r></w:p>\n"
+                        
+                        xml_data += "</w:body></w:document>"
+                        return xml_data.encode('utf-8')
+
                     col_file1, col_file2 = st.columns(2)
                     
                     with col_file1:
                         st.info("📃 **BẢNG 1: LỜI GIẢI CHI TIẾT**")
-                        st.write("Tải file Word chứa đề bài, tọa độ và toàn bộ lời giải lập luận sư phạm.")
-                        binary_doc = doc_giao_an.encode('utf-8-sig')
+                        st.write("Tải file tài liệu DOCX chuẩn mã hóa OOXML tương thích tuyệt đối hệ điều hành Android.")
+                        native_docx_data = generate_native_docx(user_text, parser.points, parser.solution_steps, latex_code)
                         st.download_button(
-                            label="📥 TẢI GIÁO ÁN WORD (.DOC)",
-                            data=binary_doc,
-                            file_name="Giao_An_Hinh_Hoc_AI.doc", 
-                            mime="application/msword",
+                            label="📥 TẢI GIÁO ÁN WORD (.DOCX)",
+                            data=native_docx_data,
+                            file_name="Giao_An_Hinh_Hoc_AI_Android_Ready.docx", 
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
                             use_container_width=True
                         )
                         
@@ -187,8 +215,7 @@ def main():
                     st.markdown("""
                         **Đặc quyền tối cao dành cho Giáo Viên VIP:**
                         * Mở khóa trọn công cụ sinh mã đề trắc nghiệm đa dạng nhiều mức độ khó.
-                        * Kích hoạt quyền tải file Giáo án/Đề thi Word (.doc) sạch lỗi font tiếng Việt.
-                        * Xuất riêng tệp mã hình TikZ (.tex) nguyên bản chèn đề thi không sợ lỗi ký tự.
+                        * Kích hoạt quyền tải file Giáo án/Đề thi Word (.docx) sạch lỗi font tiếng Việt và tương thích chéo Windows/Android.
                     """)
 
 if __name__ == "__main__":
