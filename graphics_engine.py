@@ -12,7 +12,7 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                 y_p = [parser_data.points[pt][1] for pt in poly]
                 z_p = [parser_data.points[pt][2] for pt in poly]
                 
-                # Phân biệt màu sắc giữa thiết diện và mặt phẳng đáy
+                # Phân biệt màu sắc giữa thiết diện phẳng và mặt phẳng đáy
                 is_sect = any(item in ['M', 'N', 'P', 'Q'] for item in poly) or (len(poly) == 3 and idx > 0)
                 face_color = theme_color if is_sect else "#e9ecef"
                 face_opacity = 0.5 if is_sect else 0.15 
@@ -28,7 +28,7 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
             except KeyError:
                 continue
 
-    # 2. THUẬT TOÁN PHÂN LOẠI NÉT KHUẤT TOÁN HỌC & ĐO ĐẠC ĐỘ DÀI
+    # 2. THUẬT TOÁN PHÂN LAI NÉT KHUẤT TOÁN HỌC & ĐO ĐẠC ĐỘ DÀI
     for line in parser_data.lines:
         pt1, pt2 = line[0], line[1]
         if pt1 in parser_data.points and pt2 in parser_data.points:
@@ -64,24 +64,24 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                 showlegend=False
             ))
 
-    # 3. KẾT XUẤT ĐỈNH GLOW & TỌA ĐỘ PHÁT SÁNG (Đã sửa lỗi trùng lặp tham số text)
+    # 3. KẾT XUẤT ĐỈNH GLOW & TỌA ĐỘ PHÁT SÁNG
     if parser_data.points:
         px = [coords[0] for coords in parser_data.points.values()]
         py = [coords[1] for coords in parser_data.points.values()]
         pz = [coords[2] for coords in parser_data.points.values()]
         p_names = list(parser_data.points.keys())
         
-        # Kết hợp Tên đỉnh để hiển thị tĩnh trên màn hình và Tọa độ chi tiết khi rê chuột vào chung 1 nhãn
+        # Kết hợp Tên đỉnh và Tọa độ chi tiết dạng popup khi rê chuột vào điểm
         hover_points = [f"📍 Đỉnh: {name}<br>Tọa độ không gian: ({c[0]}, {c[1]}, {c[2]})" for name, c in parser_data.points.items()]
 
         fig.add_trace(go.Scatter3d(
             x=px, y=py, z=pz,
             mode='markers+text',
             marker=dict(size=8, color='#f43f5e', line=dict(color='white', width=2)),
-            text=p_names,              # Chỉ hiển thị tên chữ cái tĩnh trên hình học (A, B, C...)
+            text=p_names,              
             textposition="top center",
             textfont=dict(size=13, color="#0f172a", family="Arial Black"),
-            hovertext=hover_points,    # Chỉ hiện tọa độ chi tiết dạng popup khi rê chuột vào điểm
+            hovertext=hover_points,    
             hoverinfo='text',
             name="Các đỉnh"
         ))
