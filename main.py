@@ -45,7 +45,7 @@ def main():
                 for line in parser.lines[:4]:
                     st.code(f"Vector {line}{line} = Tọa độ điểm {line} - Tọa độ điểm {line}")
 
-        # 🌟 PHÂN CHIA TABS CHỨC NĂNG PHÂN QUYỀN THƯƠNG MẠI CHẾ ĐỘ NGƯỜI DÙNG
+        # 🌟 PHÂN CHIA CHẾ ĐỘ NGƯỜI DÙNG: HỌC SINH TỰ HỌC
         if user_role == "Học Sinh Tự Học":
             st.markdown("### 🧑‍🎓 Phân hệ: Học Sinh Tự Học Tương Tác")
             tab_hint, tab_step = st.tabs(["🎁 Chế Độ Gợi Ý Phân Cấp (Tự Làm)", "📚 Đáp Án Chi Tiết Từng Bước (VIP)"])
@@ -66,7 +66,6 @@ def main():
                         st.markdown(step)
                 else:
                     st.error("🔒 Quyền truy cập bị từ chối. Lời giải lập luận từng bước chỉ dành cho tài khoản VIP.")
-                    
                     st.markdown("#### 💳 Quét mã chuyển khoản App Ngân Hàng để mua Mã Bản Quyền VIP Học Sinh:")
                     col_qr, col_info = st.columns([1, 1.5])
                     with col_qr:
@@ -79,7 +78,7 @@ def main():
                             * Mở khóa trọn vẹn 100% các bước lập luận, chứng minh toán học chi tiết.
                             * Kích hoạt hệ thống đổ bóng màu neon lấp lánh trực quan hóa thiết diện cắt.
                         """)
-                elif user_role == "Giáo Viên Soạn Đề":
+        elif user_role == "Giáo Viên Soạn Đề":
             st.markdown("### 👩‍🏫 Phân hệ: Công Cụ Tối Cao Cho Giáo Viên (VIP)")
             if is_vip:
                 tab_create, tab_db, tab_latex = st.tabs(["✨ Ma Trận Sinh Đề Thi Đa Dạng", "🗄️ Ngân Hàng Bài Toán", "🔮 Trích Xuất Mã LaTeX & Xuất Bản File 📥"])
@@ -112,13 +111,11 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
                     
-                    # BIÊN SOẠN TIÊU CHUẨN WORD SẠCH: Ép chặt bóc tách tọa độ không cho lặp lại đối tượng
                     doc_giao_an = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM\n"
                     doc_giao_an += f"=================================================\n\n"
                     doc_giao_an += f"1. ĐỀ BÀI TOÁN GỐC:\n{user_text}\n\n"
                     doc_giao_an += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):\n"
                     
-                    # ✨ SỬA TRIỆT ĐỂ LỖI LẶP LẠI VÀ CHỮ np.float64: Chỉ lấy số thuần túy bằng chỉ số index cụ thể
                     for name, coord in parser.points.items():
                         x_val = float(coord[0])
                         y_val = float(coord[1])
