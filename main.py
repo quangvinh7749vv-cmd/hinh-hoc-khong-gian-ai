@@ -79,7 +79,7 @@ def main():
                             * Mở khóa trọn vẹn 100% các bước lập luận, chứng minh toán học chi tiết.
                             * Kích hoạt hệ thống đổ bóng màu neon lấp lánh trực quan hóa thiết diện cắt.
                         """)
-        elif user_role == "Giáo Viên Soạn Đề":
+                elif user_role == "Giáo Viên Soạn Đề":
             st.markdown("### 👩‍🏫 Phân hệ: Công Cụ Tối Cao Cho Giáo Viên (VIP)")
             if is_vip:
                 tab_create, tab_db, tab_latex = st.tabs(["✨ Ma Trận Sinh Đề Thi Đa Dạng", "🗄️ Ngân Hàng Bài Toán", "🔮 Trích Xuất Mã LaTeX & Xuất Bản File 📥"])
@@ -102,9 +102,9 @@ def main():
                     
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
+                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -112,18 +112,22 @@ def main():
                     st.markdown("### 📥 Trung tâm Xuất bản Tài liệu Phân Tách")
                     st.write("Hệ thống đã phân chia thành hai bảng xuất file riêng biệt giúp thầy cô quản lý dữ liệu dễ dàng:")
                     
-                    # BIÊN SOẠN TIÊU CHUẨN WORD: Loại bỏ hoàn toàn mã LaTeX \frac, \cdot ở file Word xuất bản
+                    # BIÊN SOẠN TIÊU CHUẨN WORD SẠCH: Ép chặt bóc tách tọa độ không cho lặp lại đối tượng
                     doc_giao_an = f"TÀI LIỆU GIẢNG DẠY HÌNH HỌC KHÔNG GIAN AI PREMIUM\n"
                     doc_giao_an += f"=================================================\n\n"
                     doc_giao_an += f"1. ĐỀ BÀI TOÁN GỐC:\n{user_text}\n\n"
                     doc_giao_an += f"2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):\n"
+                    
+                    # ✨ SỬA TRIỆT ĐỂ LỖI LẶP LẠI VÀ CHỮ np.float64: Chỉ lấy số thuần túy bằng chỉ số index cụ thể
                     for name, coord in parser.points.items():
-                        doc_giao_an += f" - Đỉnh {name}: Toạ độ không gian hình học là ({coord}, {coord}, {coord})\n"
+                        x_val = float(coord[0])
+                        y_val = float(coord[1])
+                        z_val = float(coord[2])
+                        doc_giao_an += f" - Đỉnh {name}: Toạ độ không gian hình học là ({x_val}, {y_val}, {z_val})\n"
+                    
                     doc_giao_an += f"\n3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:\n"
                     for step in parser.solution_steps:
-                        # ✨ THUẬT TOÁN KHỬ LỖI CHỮ TOÁN HỌC DÒNG CUỐI: Chuyển mã ký tự LaTeX sang text Word bình thường
                         clean_step = step.replace("**", "").replace("$", "")
-                        clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
                         clean_step = clean_step.replace("\\frac{1}{3}", "(1/3)")
                         clean_step = clean_step.replace("\\cdot", " x ")
                         clean_step = clean_step.replace("\\perp", " vuông góc với ")
@@ -173,4 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-        
