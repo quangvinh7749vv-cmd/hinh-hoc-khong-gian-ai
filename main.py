@@ -18,10 +18,9 @@ from graphics_engine import render_graphics_engine
 BANK_ID = "mbbank"          
 ACCOUNT_NO = "0123456789"   
 PRICE_AMOUNT = "99000"      
-ADMIN_KEY = "QUANGVINH_CHOM_COSMIC"  # Mã khóa bí mật để bạn vào xem danh sách người truy cập
+ADMIN_KEY = "QUANGVINH_CHOM_COSMIC"  
 # =================================================================
 
-# 👁️ KHỞI TẠO BỘ LƯU TRỮ NHẬT KÝ KHÁCH TRUY CẬP (SESSION STATE)
 if "visitor_log" not in st.session_state:
     st.session_state.visitor_log = [
         {"Thời gian": "22:15:02 22/08/2026", "Thiết bị": "iPhone / iOS", "Vị trí giả định": "Hà Nội, Việt Nam", "Trạng thái": "Tài khoản thường"},
@@ -34,9 +33,7 @@ def main():
     parser.parse_text(user_text)
     visual_model = render_graphics_engine(parser, enable_hidden_lines, enable_shading, theme_color)
     
-    # Ghi nhận tự động lượt truy cập mới của phiên chạy hiện tại
     current_time = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
-    # Giả lập bóc tách user-agent từ trình duyệt khách
     new_visit = {"Thời gian": current_time, "Thiết bị": "Chrome / Windows", "Vị trí giả định": "Thanh Hóa, Việt Nam", "Trạng thái": "VIP" if is_vip else "Tài khoản thường"}
     if new_visit not in st.session_state.visitor_log:
         st.session_state.visitor_log.append(new_visit)
@@ -57,7 +54,7 @@ def main():
             with col_b:
                 st.markdown("**Phương trình Đoạn thẳng / Vector chỉ phương:**")
                 for line in parser.lines[:4]:
-                    st.code(f"Vector {line}{line} = Tọa độ điểm {line} - Tọa độ điểm {line}")
+                    st.code(f"Vector {line[0]}{line[1]} = Tọa độ điểm {line[1]} - Tọa độ điểm {line[0]}")
         if user_role == "Học Sinh Tự Học":
             st.markdown("### 🧑‍🎓 Phân hệ: Học Sinh Tự Học Tương Tác")
             tab_hint, tab_step, tab_exam, tab_secure = st.tabs(["🎁 Gợi Ý Phân Cấp", "📚 Lời Giải VIP", "🏆 Luyện Thi THPT", "🛡️ Chống Gian Lận"])
@@ -120,7 +117,6 @@ def main():
                     check_admin = st.text_input("Nhập mật mã quản trị tối cao của bạn:", type="password")
                     if check_admin == ADMIN_KEY:
                         st.success("🔓 ĐĂNG NHẬP ADMIN THÀNH CÔNG")
-                        st.write("Dưới đây là danh sách những người đã truy cập vào trang web của bạn:")
                         df_visitors = pd.DataFrame(st.session_state.visitor_log)
                         st.dataframe(df_visitors, use_container_width=True)
                     elif check_admin:
@@ -129,8 +125,10 @@ def main():
                 with tab_latex:
                     st.markdown("#### 📝 Mã nguồn Vector TikZ / LaTeX để giáo viên in đề thi:")
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
-                    for name, coord in parser.points.items(): latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
-                    for line in parser.lines: latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
+                    for name, coord in parser.points.items(): 
+                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
+                    for line in parser.lines: 
+                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -167,10 +165,12 @@ def main():
                     
                     p_h2 = doc.add_paragraph()
                     p_h2.add_run("2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):").bold = True
+                    
+                    # 🔥 FIXED: Sửa lỗi bóc tách bằng chỉ số index đơn lẻ, [1], [2] loại bỏ hoàn toàn TypeError
                     for name, coord in parser.points.items():
                         p_coord = doc.add_paragraph()
                         add_math_text_to_paragraph(p_coord, f" - Đỉnh {name}: ")
-                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord)}, {float(coord)}, {float(coord)})")
+                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord[0])}, {float(coord[1])}, {float(coord[2])})")
                         
                     p_h3 = doc.add_paragraph()
                     p_h3.add_run("3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:").bold = True
