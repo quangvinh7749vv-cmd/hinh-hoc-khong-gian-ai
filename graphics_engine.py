@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, theme_color):
     fig = go.Figure()
 
-    # 1. 🌌 ĐỘNG CƠ KẾT XUẤT THIẾT DIỆN 3D CHUYÊN NGHIỆP
+    # 1. 🌌 ĐỘNG CƠ KẾT XUẤT THIẾT DIỆN MÀU NEON 3D
     if enable_shading and parser_data.polygons:
         for idx, poly in enumerate(parser_data.polygons):
             try:
@@ -12,7 +12,6 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                 y_p = [parser_data.points[pt][1] for pt in poly]
                 z_p = [parser_data.points[pt][2] for pt in poly]
                 
-                # Phân biệt màu sắc giữa thiết diện phẳng và mặt phẳng đáy
                 is_sect = any(item in ['M', 'N', 'P', 'Q'] for item in poly) or (len(poly) == 3 and idx > 0)
                 face_color = theme_color if is_sect else "#e9ecef"
                 face_opacity = 0.5 if is_sect else 0.15 
@@ -21,17 +20,17 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                     x=x_p, y=y_p, z=z_p,
                     opacity=face_opacity, 
                     color=face_color,
-                    name="Mặt phẳng/Thiết diện",
                     hoverinfo="none",
                     showlegend=False
                 ))
             except KeyError:
                 continue
 
-    # 2. THUẬT TOÁN PHÂN LOẠI NÉT KHUẤT TOÁN HỌC & ĐO ĐẠC ĐỘ DÀI (ĐÃ SỬA LỖI INDEX)
+    # 2. 🔥 [ĐÃ SỬA LỖI NỐI CẠNH]: Trích xuất chuẩn xác index phần tử mảng, dựng trọn vẹn khung xương 3D
     for line in parser_data.lines:
         if len(line) == 2:
-            pt1, pt2 = line[0], line[1] # SỬA LỖI CHÍNH TẢ: Trích xuất chuẩn điểm đầu và điểm cuối
+            pt1 = line[0]  # Lấy chính xác điểm đầu tiên
+            pt2 = line[1]  # Lấy chính xác điểm thứ hai
             if pt1 in parser_data.points and pt2 in parser_data.points:
                 p1_coords = np.array(parser_data.points[pt1])
                 p2_coords = np.array(parser_data.points[pt2])
@@ -40,11 +39,10 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                 y_coords = [p1_coords[1], p2_coords[1]]
                 z_coords = [p1_coords[2], p2_coords[2]]
                 
-                # Tính khoảng cách hình học thực tế
                 dist = np.sqrt(np.sum((p1_coords - p2_coords)**2))
-                edge_label = f"✨ Cạnh hoặc Đường nối: {pt1}{pt2}<br>📏 Số đo độ dài: {round(dist, 2)} cm"
+                edge_label = f"✨ Đường nối: {pt1}{pt2}<br>📏 Độ dài thực tế: {round(dist, 2)} cm"
 
-                # Thuật toán lọc nét khuất vũ trụ
+                # Thuật toán lọc nét đứt SGK tự động
                 is_hidden = False
                 if enable_hidden_lines:
                     hidden_nodes = ['A', 'D'] 
@@ -65,15 +63,14 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
                     showlegend=False
                 ))
 
-    # 3. KẾT XUẤT ĐỈNH GLOW & TỌA ĐỘ PHÁT SÁNG
+    # 3. KẾT XUẤT ĐỈNH GLOW PHÁT SÁNG & POPUP TỌA ĐỘ (ĐÃ KHỬ LỖI KHAI BÁO BIẾN)
     if parser_data.points:
         px = [coords[0] for coords in parser_data.points.values()]
         py = [coords[1] for coords in parser_data.points.values()]
         pz = [coords[2] for coords in parser_data.points.values()]
         p_names = list(parser_data.points.keys())
         
-        # Kết hợp Tên đỉnh và Tọa độ chi tiết dạng popup khi rê chuột vào điểm
-        hover_points = [f"📍 Đỉnh: {name}<br>Tọa độ không gian: ({c[0]}, {c[1]}, {c[2]})" for name, c in parser_data.points.items()]
+        hover_points = [f"📍 Đỉnh: {name}<br>Tọa độ không gian Oxyz: ({c[0]}, {c[1]}, {c[2]})" for name, c in parser_data.points.items()]
 
         fig.add_trace(go.Scatter3d(
             x=px, y=py, z=pz,
@@ -87,7 +84,6 @@ def render_graphics_engine(parser_data, enable_hidden_lines, enable_shading, the
             name="Các đỉnh"
         ))
 
-    # CẤU HÌNH PHÒNG THÍ NGHIỆM ĐỒ HỌA
     fig.update_layout(
         margin=dict(l=0, r=0, b=0, t=0),
         scene=dict(

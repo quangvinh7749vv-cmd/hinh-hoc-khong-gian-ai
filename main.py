@@ -4,7 +4,7 @@ import pandas as pd
 import re
 import io
 from docx import Document
-from docx.shared import Pt, Inches
+from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from core_parser import GeometryParser
 from ui_layout import build_user_interface
@@ -106,9 +106,9 @@ def main():
                     
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
+                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -157,7 +157,7 @@ def main():
                     for name, coord in parser.points.items():
                         p_coord = doc.add_paragraph()
                         add_math_text_to_paragraph(p_coord, f" - Đỉnh {name}: ")
-                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord)}, {float(coord)}, {float(coord)})")
+                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord[0])}, {float(coord[1])}, {float(coord[2])})")
                         
                     p_h3 = doc.add_paragraph()
                     p_h3.add_run("3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:").bold = True
