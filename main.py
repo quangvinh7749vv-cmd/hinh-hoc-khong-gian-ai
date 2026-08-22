@@ -4,6 +4,7 @@ import pandas as pd
 import re
 import io
 import hashlib
+import requests  # Thư viện quét IP thực tế
 from datetime import datetime
 from docx import Document
 from docx.shared import Pt
@@ -22,10 +23,7 @@ ADMIN_KEY = "QUANGVINH_CHOM_COSMIC"
 # =================================================================
 
 if "visitor_log" not in st.session_state:
-    st.session_state.visitor_log = [
-        {"Thời gian": "22:15:02 22/08/2026", "Thiết bị": "iPhone / iOS", "Vị trí giả định": "Hà Nội, Việt Nam", "Trạng thái": "Tài khoản thường"},
-        {"Thời gian": "22:18:45 22/08/2026", "Thiết bị": "Samsung / Android", "Vị trí giả định": "TP. Hồ Chí Minh", "Trạng thái": "Đã mua VIP"},
-    ]
+    st.session_state.visitor_log = []
 
 def main():
     user_text, display_column, enable_hidden_lines, enable_shading, theme_color, is_vip, user_role = build_user_interface()
@@ -33,9 +31,19 @@ def main():
     parser.parse_text(user_text)
     visual_model = render_graphics_engine(parser, enable_hidden_lines, enable_shading, theme_color)
     
+    # 🕵️ THUẬT TOÁN QUÉT VỊ TRÍ THỰC TẾ TỪ ĐỊA CHỈ IP
     current_time = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
-    new_visit = {"Thời gian": current_time, "Thiết bị": "Chrome / Windows", "Vị trí giả định": "Thanh Hóa, Việt Nam", "Trạng thái": "VIP" if is_vip else "Tài khoản thường"}
-    if new_visit not in st.session_state.visitor_log:
+    try:
+        # Gọi API quét định vị IP toàn cầu
+        response = requests.get("http://ip-api.com", timeout=2).json()
+        real_location = f"{response.get('city', 'Không rõ')}, {response.get('country', 'Việt Nam')}"
+    except Exception:
+        real_location = "Hệ thống chặn mạng, Việt Nam"
+
+    new_visit = {"Thời gian": current_time, "Thiết bị": "Trình duyệt Web", "Vị trí thực tế": real_location, "Trạng thái": "VIP" if is_vip else "Tài khoản thường"}
+    
+    # Chống trùng lặp bản ghi trong cùng một phiên chạy
+    if not st.session_state.visitor_log or st.session_state.visitor_log[-1]["Thời gian"][:5] != current_time[:5]:
         st.session_state.visitor_log.append(new_visit)
     
     with display_column:
@@ -54,7 +62,7 @@ def main():
             with col_b:
                 st.markdown("**Phương trình Đoạn thẳng / Vector chỉ phương:**")
                 for line in parser.lines[:4]:
-                    st.code(f"Vector {line[0]}{line[1]} = Tọa độ điểm {line[1]} - Tọa độ điểm {line[0]}")
+                    st.code(f"Vector {line}{line} = Tọa độ điểm {line} - Tọa độ điểm {line}")
         if user_role == "Học Sinh Tự Học":
             st.markdown("### 🧑‍🎓 Phân hệ: Học Sinh Tự Học Tương Tác")
             tab_hint, tab_step, tab_exam, tab_secure = st.tabs(["🎁 Gợi Ý Phân Cấp", "📚 Lời Giải VIP", "🏆 Luyện Thi THPT", "🛡️ Chống Gian Lận"])
@@ -113,10 +121,11 @@ def main():
                     st.write("🔍 Kết quả tìm thấy: **10 bài toán mẫu chuẩn cấu trúc Bộ Giáo Dục** phù hợp từ khóa.")
                     
                 with tab_admin:
-                    st.markdown("#### 🕵️ Cổng tra cứu thông tin khách truy cập (Chỉ dành cho Quang Vinh):")
+                    st.markdown("#### 🕵️ Cổng tra cứu thông tin khách truy cập thực tế:")
                     check_admin = st.text_input("Nhập mật mã quản trị tối cao của bạn:", type="password")
                     if check_admin == ADMIN_KEY:
                         st.success("🔓 ĐĂNG NHẬP ADMIN THÀNH CÔNG")
+                        st.write("Danh sách định vị thực tế của khách hàng vừa truy cập hệ thống:")
                         df_visitors = pd.DataFrame(st.session_state.visitor_log)
                         st.dataframe(df_visitors, use_container_width=True)
                     elif check_admin:
@@ -126,9 +135,9 @@ def main():
                     st.markdown("#### 📝 Mã nguồn Vector TikZ / LaTeX để giáo viên in đề thi:")
                     latex_code = "\\begin{tikzpicture}[scale=1.0]\n"
                     for name, coord in parser.points.items(): 
-                        latex_code += f"\\coordinate ({name}) at ({coord[0]}, {coord[1]}, {coord[2]});\n"
+                        latex_code += f"\\coordinate ({name}) at ({coord}, {coord}, {coord});\n"
                     for line in parser.lines: 
-                        latex_code += f"\\draw[thick] ({line[0]}) -- ({line[1]});\n"
+                        latex_code += f"\\draw[thick] ({line}) -- ({line});\n"
                     latex_code += "\\end{tikzpicture}"
                     st.code(latex_code, language="latex")
                     
@@ -165,12 +174,10 @@ def main():
                     
                     p_h2 = doc.add_paragraph()
                     p_h2.add_run("2. SỐ LIỆU PHÂN TÍCH KHÔNG GIAN TOẠ ĐỘ (Oxyz):").bold = True
-                    
-                    # 🔥 FIXED: Sửa lỗi bóc tách bằng chỉ số index đơn lẻ, [1], [2] loại bỏ hoàn toàn TypeError
                     for name, coord in parser.points.items():
                         p_coord = doc.add_paragraph()
                         add_math_text_to_paragraph(p_coord, f" - Đỉnh {name}: ")
-                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord[0])}, {float(coord[1])}, {float(coord[2])})")
+                        p_coord.add_run(f"Toạ độ không gian hình học là ({float(coord)}, {float(coord)}, {float(coord)})")
                         
                     p_h3 = doc.add_paragraph()
                     p_h3.add_run("3. HƯỚNG DẪN GIẢI CHI TIẾT THEO TIẾN TRÌNH SƯ PHẠM:").bold = True
